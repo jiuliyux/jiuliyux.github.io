@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>树种分类与树木信息可视化系统</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        #floorPlan {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #ddd;
+            position: relative;
+            margin-bottom: 30px;
+            background: #f5f5f5;
+        }
+        .location-point {
+            width: 20px;
+            height: 20px;
+            background-color: #e74c3c;
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .location-point:hover {
+            transform: scale(1.2);
+        }
+        #threeDView {
+            width: 100%;
+            height: 500px;
+            border: 2px solid #ddd;
+            display: none;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        .modal-content {
+            margin-bottom: 15px;
+        }
+        .close-btn {
+            float: right;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .instructions {
+            margin: 20px 0;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>树种分类与树木信息可视化系统</h1>
+        
+        <div class="instructions">
+            <h3>使用说明:</h3>
+            <ol>
+                <li>准备数据文件:
+                    <ul>
+                        <li>创建 locationPoints.json 文件，包含树木位置信息，格式如:
+                            <pre>[{"x": 100, "y": 200}, {"x": 300, "y": 400}]</pre>
+                        </li>
+                        <li>创建 treeData.json 文件，包含树木详细信息，格式如:
+                            <pre>{
+    "location1": [
+        {"height": 10, "diameter": 30, "carbonStorage": 100},
+        {"height": 8, "diameter": 25, "carbonStorage": 80}
+    ],
+    "location2": [...]
+}</pre>
+                        </li>
+                    </ul>
+                </li>
+                <li>将数据文件上传到GitHub仓库</li>
+                <li>修改代码中的GitHub链接:
+                    <pre>const locationPointsResponse = await fetch('你的locationPoints.json链接');
+const treeDataResponse = await fetch('你的treeData.json链接');</pre>
+                </li>
+                <li>在平面图上点击红点可查看该位置的树木3D模型</li>
+                <li>点击3D模型可查看树木详细信息</li>
+            </ol>
+        </div>
+        
+        <div id="floorPlan">
+            <!-- 这里放置平面图，点位将通过JavaScript动态添加 -->
+        </div>
+        
+        <div id="threeDView">
+            <!-- 这里将放置三维视图 -->
+        </div>
+        
+        <div id="treeModal" class="modal">
+            <span class="close-btn">&times;</span>
+            <div class="modal-content">
+                <h3>树木详细信息</h3>
+                <p>树高: <span id="treeHeight"></span> 米</p>
+                <p>胸径: <span id="treeDiameter"></span> 厘米</p>
+                <p>碳储量: <span id="carbonStorage"></span> 千克</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // 从GitHub获取数据
+        async function fetchData() {
+            try {
+                // 替换为你的GitHub仓库原始数据URL
+                const locationPointsResponse = await fetch('https://raw.githubusercontent.com/your-username/your-repo/main/locationPoints.json');
+                const treeDataResponse = await fetch('https://raw.githubusercontent.com/your-username/your-repo/main/treeData.json');
+                
+                const locationPoints = await locationPointsResponse.json();
+                const treeData = await treeDataResponse.json();
+                
+                initializeViewer(locationPoints, treeData);
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                alert('请确保已正确配置数据文件并更新GitHub链接');
+            }
+        }
+
+        function initializeViewer(locationPoints, treeData) {
+            // 添加点位标记
+            const floorPlan = document.getElementById('floorPlan');
+            locationPoints.forEach((point, index) => {
+                const marker = document.createElement('div');
+                marker.className = 'location-point';
+                marker.style.left = point.x + 'px';
+                marker.style.top = point.y + 'px';
+                marker.title = `位置 ${index + 1}`;
+                marker.addEventListener('click', () => showThreeDView(`location${index + 1}`, treeData));
+                floorPlan.appendChild(marker);
+            });
+        }
+
+        // 显示三维视图
+        function showThreeDView(locationId, treeData) {
+            const threeDView = document.getElementById('threeDView');
+            threeDView.style.display = 'block';
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, threeDView.clientWidth / threeDView.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(threeDView.clientWidth, threeDView.clientHeight);
+            threeDView.innerHTML = '';
+            threeDView.appendChild(renderer.domElement);
+
+            const trees = treeData[locationId];
+            trees.forEach(tree => {
+                const geometry = new THREE.CylinderGeometry(0.5, 0.5, tree.height, 32);
+                const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+                const cylinder = new THREE.Mesh(geometry, material);
+                cylinder.userData = tree;
+                scene.add(cylinder);
+                
+                cylinder.addEventListener('click', () => showTreeDetails(tree));
+            });
+
+            camera.position.z = 5;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        // 显示树木详情
+        function showTreeDetails(tree) {
+            const modal = document.getElementById('treeModal');
+            document.getElementById('treeHeight').textContent = tree.height;
+            document.getElementById('treeDiameter').textContent = tree.diameter;
+            document.getElementById('carbonStorage').textContent = tree.carbonStorage;
+            modal.style.display = 'block';
+        }
+
+        // 关闭模态框
+        document.querySelector('.close-btn').addEventListener('click', () => {
+            document.getElementById('treeModal').style.display = 'none';
+        });
+
+        // 初始化加载数据
+        fetchData();
+    </script>
+</body>
+</html>
