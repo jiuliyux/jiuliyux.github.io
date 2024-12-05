@@ -144,23 +144,23 @@
         async function loadData() {
             try {
                 // 加载地图区域JSON文件
-                const areaResponse = await fetch('data/area.json');
+                const areaResponse = await fetch('https://github.com/jiuliyux/jiuliyux.github.io/main/data/area.json');
                 areaData = await areaResponse.json();
 
                 // 加载每个区域的树木数据
                 for (let i = 1; i <= 7; i++) {
-                    const areaTreeDataResponse = await fetch(`data/area${i}_treedata.json`);
+                    const areaTreeDataResponse = await fetch(`https://github.com/jiuliyux/jiuliyux.github.io/main/data/area${i}_treedata.json`);
                     treeData[`area${i}`] = await areaTreeDataResponse.json();
 
                     // 加载区域图片
                     areaImages[`area${i}`] = new Image();
-                    areaImages[`area${i}`].src = `image/area${i}.png`;
+                    areaImages[`area${i}`].src = `https://github.com/jiuliyux/jiuliyux.github.io/main/image/area${i}.png`;
                 }
 
                 // 加载大地图
                 const mapContainer = document.getElementById('mapContainer');
                 const mapImg = new Image();
-                mapImg.src = 'image/map.png';
+                mapImg.src = 'https://github.com/jiuliyux/jiuliyux.github.io/main/image/map.png';
                 mapContainer.appendChild(mapImg);
 
                 // 初始化地图
@@ -236,7 +236,7 @@
         async function loadTreePointCloud(treeId) {
             try {
                 // 假设点云数据存储在pointclouds目录中，文件名为tree1.txt等
-                const response = await fetch(`pointclouds/tree${treeId}.txt`);
+                const response = await fetch(`tree/${treeId}.txt`);
                 const pointCloudData = await response.text();
                 const points = parsePointCloudData(pointCloudData);
 
