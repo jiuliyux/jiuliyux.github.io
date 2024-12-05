@@ -1,188 +1,205 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>树木三维展示</title>
-  <!-- 引入 Three.js 库 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <style>
-    #main {
-         display: flex;
-         flex-direction: column;
-         align-items: center;
-         padding: 20px;
-    }
-
-    #mapContainer {
-         display: flex;
-         flex-direction: column;
-         align-items: center;
-    }
-
-     #map {
-         position: relative;
-         width: 600px;
-         height: 400px;
-         border: 1px solid #ccc;
-    }
-
-     #detailedContainer {
-         margin-top: 20px;
-         display: flex;
-         flex-direction: column;
-         align-items: center;
-     }
-
-     #treeDetailsContainer {
-         width: 600px;
-         display: flex;
-         flex-direction: column;
-         align-items: center;
-     }
-
-      #treeDetails {
-         margin-bottom: 10px;
-     }
-
-      #threeDViewContainer {
-         width: 600px;
-         text-align: center;
-     }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>树木信息展示系统</title>
+    <style>
+        /* 页面布局样式 */
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        .section {
+            width: 80%;
+            margin: 20px 0;
+        }
+        .map-container, .detailed-map-container {
+            border: 1px solid #ccc;
+            width: 100%;
+            height: 400px;
+            position: relative;
+        }
+        .tree-point, .location-point {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        #treeDetails {
+            margin-top: 20px;
+        }
+        #threeDView {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #ccc;
+            display: none;
+        }
+    </style>
 </head>
 <body>
-  <div id="main">
-  <div id="mapContainer">
-    <!-- 这里展示大地图及区域坐标 -->
-    <img id="regionImage" src="" alt="Region Image">
-    <div id="map" style="position: relative; width: 600px; height: 400px;"></div>
-  </div>
+    <div class="container">
+        <!-- 使用说明页面 -->
+        <section id="instructions" class="section">
+            <h2>使用说明</h2>
+            <p>欢迎使用树木信息展示系统。首先在大地图页面中选择一个坐标点，然后在详细地图中查看该区域的树木信息。</p>
+            <button onclick="showMapPage()">开始使用</button>
+        </section>
 
-  <!-- 详细图显示和树木信息展示 -->
-  <div id="detailedContainer">
-    <div id="treeDetailsContainer">
-      <div id="treeDetails">
-        <p id="treeHeight"></p>
-        <p id="treeDiameter"></p>
-        <p id="carbonStorage"></p>
-      </div>
+        <!-- 大地图页面 -->
+        <section id="mapPage" class="section" style="display: none;">
+            <h2>大地图</h2>
+            <div class="map-container" id="mapContainer"></div>
+            <button onclick="showInstructionsPage()">返回使用说明</button>
+        </section>
 
-      <!-- 三维点云显示 -->
-      <div id="threeDViewContainer" style="margin-top: 20px;">
-        <div id="threeDView" style="width: 400px; height: 400px;"></div>
-      </div>
+        <!-- 详细地图页面 -->
+        <section id="detailedMapPage" class="section" style="display: none;">
+            <h2>详细地图</h2>
+            <div class="detailed-map-container" id="detailedMapContainer"></div>
+            <button onclick="showMapPage()">返回大地图</button>
+        </section>
+
+        <!-- 树木信息页面 -->
+        <section id="treeInfoPage" class="section" style="display: none;">
+            <h2>树木信息</h2>
+            <div id="threeDView"></div>
+            <div id="treeDetails">
+                <p id="treeHeight">树高: --</p>
+                <p id="treeDiameter">胸径: --</p>
+                <p id="carbonStorage">碳储量: --</p>
+            </div>
+            <button onclick="showDetailedMapPage()">返回详细地图</button>
+        </section>
     </div>
-  </div>
-</div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-  <script>
-    async function fetchData() {
-      try {
-        // 获取树木数据
-        const treeDataResponse = await fetch('https://raw.githubusercontent.com/your-username/your-repo/main/treedata.json');
-        const treeData = await treeDataResponse.json();
+    <script>
+        // 页面切换函数
+        function showInstructionsPage() {
+            document.getElementById('instructions').style.display = 'block';
+            document.getElementById('mapPage').style.display = 'none';
+            document.getElementById('detailedMapPage').style.display = 'none';
+            document.getElementById('treeInfoPage').style.display = 'none';
+        }
 
-        // 获取区域坐标数据
-        const region1Response = await fetch('https://github.com/jiuliyux/jiuliyux.github.io/main/image/.json');
-        const region1Data = await region1Response.json();
+        function showMapPage() {
+            document.getElementById('instructions').style.display = 'none';
+            document.getElementById('mapPage').style.display = 'block';
+            document.getElementById('detailedMapPage').style.display = 'none';
+            document.getElementById('treeInfoPage').style.display = 'none';
+            fetchData(); // 加载数据
+        }
 
-        // 初始化大地图
-        initializeMap(region1Data, treeData);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        alert('请确保数据文件和GitHub链接正确');
-      }
-    }
+        function showDetailedMapPage() {
+            document.getElementById('mapPage').style.display = 'none';
+            document.getElementById('detailedMapPage').style.display = 'block';
+            document.getElementById('treeInfoPage').style.display = 'none';
+        }
 
-    // 初始化大地图，展示区域
-    function initializeMap(regionData, treeData) {
-      const mapContainer = document.getElementById('map');
-      const regionImage = document.getElementById('regionImage');
-      regionImage.src = 'https://github.com/jiuliyux/jiuliyux.github.io/main/image/map.png'; // 区域1的图片路径
+        function showTreeInfoPage() {
+            document.getElementById('detailedMapPage').style.display = 'none';
+            document.getElementById('treeInfoPage').style.display = 'block';
+        }
 
-      regionData.forEach((point) => {
-        const marker = document.createElement('div');
-        marker.className = 'location-point';
-        marker.style.position = 'absolute';
-        marker.style.left = point.x + 'px';
-        marker.style.top = point.y + 'px';
-        marker.style.width = '10px';
-        marker.style.height = '10px';
-        marker.style.backgroundColor = 'red';
-        marker.addEventListener('click', () => loadTreeDetails(point.treeid, treeData));
-        mapContainer.appendChild(marker);
-      });
-    }
+        // 数据获取与展示
+        async function fetchData() {
+            try {
+                const locationPointsResponse = await fetch('https://raw.githubusercontent.com/your-username/your-repo/main/locationPoints.json');
+                const treeDataResponse = await fetch('https://raw.githubusercontent.com/your-username/your-repo/main/treeData.json');
 
-    // 加载树木的详细信息及三维点云
-    async function loadTreeDetails(treeId, treeData) {
-      // 获取树木的详细信息
-      const tree = treeData[treeId];
-      displayTreeInfo(tree);
-      
-      // 加载树木的三维点云数据
-      const pointCloudResponse = await fetch(`https://raw.githubusercontent.com/your-username/your-repo/main/3dPointClouds/${treeId}.txt`);
-      const pointCloudData = await pointCloudResponse.text();
-      
-      // 解析点云数据并展示
-      displayPointCloud(pointCloudData);
-    }
+                const locationPoints = await locationPointsResponse.json();
+                const treeData = await treeDataResponse.json();
 
-    // 展示树木的详细信息
-    function displayTreeInfo(tree) {
-      document.getElementById('treeHeight').textContent = `树高: ${tree.height} 米`;
-      document.getElementById('treeDiameter').textContent = `胸径: ${tree.diameter} 厘米`;
-      document.getElementById('carbonStorage').textContent = `碳储量: ${tree.carbonStorage} kg`;
-    }
+                initializeMap(locationPoints, treeData); // 初始化大地图
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                alert('请确保已正确配置数据文件并更新GitHub链接');
+            }
+        }
 
-    // 展示三维点云
-    function displayPointCloud(pointCloudData) {
-      const threeDViewContainer = document.getElementById('threeDView');
-      threeDViewContainer.innerHTML = '';  // 清空之前的内容
+        function initializeMap(locationPoints, treeData) {
+            const mapContainer = document.getElementById('mapContainer');
+            locationPoints.forEach((point, index) => {
+                const marker = document.createElement('div');
+                marker.className = 'location-point';
+                marker.style.left = point.x + 'px';
+                marker.style.top = point.y + 'px';
+                marker.title = `位置 ${index + 1}`;
+                
+                marker.addEventListener('click', () => {
+                    showDetailedMap(point.locationId, treeData);
+                });
+                
+                mapContainer.appendChild(marker);
+            });
+        }
 
-      const points = parsePointCloudData(pointCloudData);
-      render3DPointCloud(points, threeDViewContainer);
-    }
+        function showDetailedMap(locationId, treeData) {
+            const detailedMapContainer = document.getElementById('detailedMapContainer');
+            detailedMapContainer.style.display = 'block';
 
-    // 解析三维点云数据
-    function parsePointCloudData(data) {
-      const lines = data.split('\n');
-      const points = lines.map(line => {
-        const [x, y, z] = line.split(' ').map(Number);
-        return new THREE.Vector3(x, y, z);
-      });
-      return points;
-    }
+            const locationData = treeData[locationId];
+            const map = document.getElementById('detailedMapContainer');
+            map.innerHTML = ''; // 清空已有内容
 
-    // 使用 Three.js 渲染三维点云
-    function render3DPointCloud(points, container) {
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-      const renderer = new THREE.WebGLRenderer();
-      renderer.setSize(container.clientWidth, container.clientHeight);
-      container.appendChild(renderer.domElement);
+            locationData.points.forEach((point, index) => {
+                const marker = document.createElement('div');
+                marker.className = 'tree-point';
+                marker.style.left = point.x + 'px';
+                marker.style.top = point.y + 'px';
+                marker.title = `树木 ${index + 1}`;
+                
+                marker.addEventListener('click', () => {
+                    showTreeDetails(point);
+                });
 
-      const geometry = new THREE.BufferGeometry().setFromPoints(points);
-      const material = new THREE.PointsMaterial({ color: 0x00ff00, size: 0.1 });
-      const pointCloud = new THREE.Points(geometry, material);
-      scene.add(pointCloud);
+                map.appendChild(marker);
+            });
+        }
 
-      camera.position.z = 50;
+        function showTreeDetails(tree) {
+            showTreeInfoPage();  // 显示树木信息页面
 
-      function animate() {
-        requestAnimationFrame(animate);
-        pointCloud.rotation.x += 0.01;
-        pointCloud.rotation.y += 0.01;
-        renderer.render(scene, camera);
-      }
+            document.getElementById('treeHeight').textContent = `树高: ${tree.height} m`;
+            document.getElementById('treeDiameter').textContent = `胸径: ${tree.diameter} cm`;
+            document.getElementById('carbonStorage').textContent = `碳储量: ${tree.carbonStorage} kg`;
 
-      animate();
-    }
+            const threeDView = document.getElementById('threeDView');
+            threeDView.style.display = 'block';
 
-    // 初始化数据
-    fetchData();
-  </script>
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, threeDView.clientWidth / threeDView.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(threeDView.clientWidth, threeDView.clientHeight);
+            threeDView.innerHTML = '';
+            threeDView.appendChild(renderer.domElement);
+
+            const geometry = new THREE.CylinderGeometry(0.5, 0.5, tree.height, 32);
+            const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+            const cylinder = new THREE.Mesh(geometry, material);
+            scene.add(cylinder);
+
+            camera.position.z = 5;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        // 初始页面：加载使用说明
+        showInstructionsPage();
+    </script>
 </body>
 </html>
+
