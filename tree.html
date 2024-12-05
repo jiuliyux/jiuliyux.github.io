@@ -85,7 +85,7 @@
         const treeData = await treeDataResponse.json();
 
         // 获取区域坐标数据
-        const region1Response = await fetch('https://raw.githubusercontent.com/your-username/your-repo/main/regionCoordinates/region1.json');
+        const region1Response = await fetch('https://github.com/jiuliyux/jiuliyux.github.io/main/image/.json');
         const region1Data = await region1Response.json();
 
         // 初始化大地图
@@ -100,7 +100,7 @@
     function initializeMap(regionData, treeData) {
       const mapContainer = document.getElementById('map');
       const regionImage = document.getElementById('regionImage');
-      regionImage.src = 'https://raw.githubusercontent.com/your-username/your-repo/main/images/region1.jpg'; // 区域1的图片路径
+      regionImage.src = 'https://github.com/jiuliyux/jiuliyux.github.io/main/image/map.png'; // 区域1的图片路径
 
       regionData.forEach((point) => {
         const marker = document.createElement('div');
