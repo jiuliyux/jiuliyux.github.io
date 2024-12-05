@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,24 +9,31 @@
         body {
             font-family: Arial, sans-serif;
         }
-        .container {
+
+      .container {
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
         }
-        .section {
+
+      .section {
             width: 80%;
             margin: 20px 0;
         }
-        .map-container, .detailed-map-container, #tree3DContainer {
+
+      .map-container,
+      .detailed-map-container,
+       #tree3DContainer {
             border: 1px solid #ccc;
             width: 100%;
             height: 400px;
             position: relative;
             background-color: #f0f0f0;
         }
-        .tree-point, .location-point {
+
+      .tree-point,
+      .location-point {
             position: absolute;
             width: 10px;
             height: 10px;
@@ -33,17 +41,25 @@
             border-radius: 50%;
             cursor: pointer;
         }
-        #treeDetails {
+
+      .tree-point:hover,
+      .location-point:hover {
+            background-color: blue;
+        }
+
+       #treeDetails {
             margin-top: 20px;
             display: flex;
             justify-content: space-between;
         }
-        #threeDView {
+
+       #threeDView {
             width: 45%;
             height: 300px;
             border: 1px solid #ccc;
         }
-        #treeInfo {
+
+       #treeInfo {
             width: 45%;
             padding: 20px;
             background-color: #f9f9f9;
@@ -51,12 +67,13 @@
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <!-- 使用说明页面 -->
         <section id="instructions" class="section">
             <h2>使用说明</h2>
-            <p>点击地图上的区域，查看该区域的树木信息及三维模型。</p>
+            <p>点击地图上的区域代表点，查看该区域的树木信息及三维模型。</p>
             <button onclick="showMapPage()">开始使用</button>
         </section>
 
@@ -158,19 +175,18 @@
         function initializeMap() {
             const mapContainer = document.getElementById('mapContainer');
             Object.keys(areaData).forEach(areaId => {
-                areaData[areaId].points.forEach((point, index) => {
-                    const marker = document.createElement('div');
-                    marker.className = 'location-point';
-                    marker.style.left = point.x + 'px';
-                    marker.style.top = point.y + 'px';
-                    marker.title = `${areaId} 区域 ${index + 1}`;
+                const representativePoint = areaData[areaId].representativePoint;
+                const marker = document.createElement('div');
+                marker.className = 'location-point';
+                marker.style.left = representativePoint.x + 'px';
+                marker.style.top = representativePoint.y + 'px';
+                marker.title = `${areaId} 区域`;
 
-                    marker.addEventListener('click', () => {
-                        showDetailedMap(areaId, point);
-                    });
-
-                    mapContainer.appendChild(marker);
+                marker.addEventListener('click', () => {
+                    showDetailedMap(areaId, representativePoint);
                 });
+
+                mapContainer.appendChild(marker);
             });
         }
 
@@ -220,7 +236,7 @@
         async function loadTreePointCloud(treeId) {
             try {
                 // 假设点云数据存储在pointclouds目录中，文件名为tree1.txt等
-                const response = await fetch(`pointclouds/${treeId}.txt`);
+                const response = await fetch(`pointclouds/tree${treeId}.txt`);
                 const pointCloudData = await response.text();
                 const points = parsePointCloudData(pointCloudData);
 
@@ -277,5 +293,6 @@
         }
     </script>
 </body>
+
 </html>
 
