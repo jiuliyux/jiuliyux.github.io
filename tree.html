@@ -142,53 +142,35 @@
 
         // 数据加载函数
         async function loadData() {
-            try {
-                // 加载地图区域JSON文件
-                const areaResponse = await fetch('https://github.com/jiuliyux/jiuliyux.github.io/main/data/area.json');
-                areaData = await areaResponse.json();
+     try {
+        // 加载地图区域JSON文件
+        const areaResponse = await fetch('https://raw.githubusercontent.com/jiuliyux/jiuliyux.github.io/main/data/area.json');
+        areaData = await areaResponse.json();
 
-                // 加载每个区域的树木数据
-                for (let i = 1; i <= 7; i++) {
-                    const areaTreeDataResponse = await fetch(`https://github.com/jiuliyux/jiuliyux.github.io/main/data/area${i}_treedata.json`);
-                    treeData[`area${i}`] = await areaTreeDataResponse.json();
+        // 加载每个区域的树木数据
+        for (let i = 1; i <= 7; i++) {
+            const areaTreeDataResponse = await fetch(`https://raw.githubusercontent.com/jiuliyux/jiuliyux.github.io/main/data/area${i}_treedata.json`);
+            treeData[`area${i}`] = await areaTreeDataResponse.json();
 
-                    // 加载区域图片
-                    areaImages[`area${i}`] = new Image();
-                    areaImages[`area${i}`].src = `https://github.com/jiuliyux/jiuliyux.github.io/main/image/area${i}.png`;
-                }
-
-                // 加载大地图
-                const mapContainer = document.getElementById('mapContainer');
-                const mapImg = new Image();
-                mapImg.src = 'https://github.com/jiuliyux/jiuliyux.github.io/main/image/map.png';
-                mapContainer.appendChild(mapImg);
-
-                // 初始化地图
-                initializeMap();
-            } catch (error) {
-                console.error('Error loading data:', error);
-                alert('加载数据失败');
-            }
+            // 加载区域图片
+            areaImages[`area${i}`] = new Image();
+            areaImages[`area${i}`].src = `https://raw.githubusercontent.com/jiuliyux/jiuliyux.github.io/main/image/area${i}.png`;
         }
 
-        // 初始化大地图
-        function initializeMap() {
-            const mapContainer = document.getElementById('mapContainer');
-            Object.keys(areaData).forEach(areaId => {
-                const representativePoint = areaData[areaId].representativePoint;
-                const marker = document.createElement('div');
-                marker.className = 'location-point';
-                marker.style.left = representativePoint.x + 'px';
-                marker.style.top = representativePoint.y + 'px';
-                marker.title = `${areaId} 区域`;
+        // 加载大地图
+        const mapContainer = document.getElementById('mapContainer');
+        const mapImg = new Image();
+        mapImg.src = 'https://raw.githubusercontent.com/jiuliyux/jiuliyux.github.io/main/image/map.png';
+        mapContainer.appendChild(mapImg);
 
-                marker.addEventListener('click', () => {
-                    showDetailedMap(areaId, representativePoint);
-                });
+        // 初始化地图
+        initializeMap();
+    } catch (error) {
+        console.error('Error loading data:', error);
+        alert('加载数据失败');
+    }
+}
 
-                mapContainer.appendChild(marker);
-            });
-        }
 
         // 显示详细地图
         function showDetailedMap(areaId, point) {
