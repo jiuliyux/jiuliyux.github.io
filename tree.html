@@ -10,21 +10,21 @@
             font-family: Arial, sans-serif;
         }
 
-      .container {
+        .container {
             display: flex;
             flex-direction: column;
             align-items: center;
             padding: 20px;
         }
 
-      .section {
+        .section {
             width: 80%;
             margin: 20px 0;
         }
 
-      .map-container,
-      .detailed-map-container,
-       #tree3DContainer {
+        .map-container,
+        .detailed-map-container,
+        #tree3DContainer {
             border: 1px solid #ccc;
             width: 100%;
             height: 400px;
@@ -32,8 +32,8 @@
             background-color: #f0f0f0;
         }
 
-      .tree-point,
-      .location-point {
+        .tree-point,
+        .location-point {
             position: absolute;
             width: 10px;
             height: 10px;
@@ -42,24 +42,24 @@
             cursor: pointer;
         }
 
-      .tree-point:hover,
-      .location-point:hover {
-            background-color: blue;
-        }
+            .tree-point:hover,
+            .location-point:hover {
+                background-color: blue;
+            }
 
-       #treeDetails {
+        #treeDetails {
             margin-top: 20px;
             display: flex;
             justify-content: space-between;
         }
 
-       #threeDView {
+        #threeDView {
             width: 45%;
             height: 300px;
             border: 1px solid #ccc;
         }
 
-       #treeInfo {
+        #treeInfo {
             width: 45%;
             padding: 20px;
             background-color: #f9f9f9;
@@ -109,7 +109,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
-        let areaData = {};
+    let areaData = {};
         let treeData = {};
         let areaImages = {};
 
@@ -142,34 +142,58 @@
 
         // 数据加载函数
         async function loadData() {
-     try {
-        // 加载地图区域JSON文件
-        const areaResponse = await fetch('https://raw.githubusercontent.com/jiuliyux/jiuliyux.github.io/main/data/area.json');
-        areaData = await areaResponse.json();
+            try {
+                // 加载地图区域JSON文件
+                const areaResponse = await fetch('https://raw.githubusercontent.com/jiuliyux/jiuliyux.github.io/main/data/area.json');
+                if (!areaResponse.ok) {
+                    throw new Error(`Failed to load area.json: ${areaResponse.statusText}`);
+                }
+                const areaData = await areaResponse.json();
+                console.log('Area Data Loaded:', areaData);  // 测试输出加载的区域数据
 
-        // 加载每个区域的树木数据
-        for (let i = 1; i <= 7; i++) {
-            const areaTreeDataResponse = await fetch(`https://raw.githubusercontent.com/jiuliyux/jiuliyux.github.io/main/data/area${i}_treedata.json`);
-            treeData[`area${i}`] = await areaTreeDataResponse.json();
+                // 加载每个区域的树木数据
+                const treeData = {};  // 用于存储每个区域的树木数据
+                const areaImages = {}; // 用于存储每个区域的图片
+                for (let i = 1; i <= 7; i++) {
+                    const areaTreeDataResponse = await fetch(`https://raw.githubusercontent.com/jiuliyux/jiuliyux.github.io/main/data/area${i}_treedata.json`);
+                    if (!areaTreeDataResponse.ok) {
+                        throw new Error(`Failed to load area${i}_treedata.json: ${areaTreeDataResponse.statusText}`);
+                    }
+                    treeData[`area${i}`] = await areaTreeDataResponse.json();
+                    console.log(`Tree Data for area${i}:`, treeData[`area${i}`]);  // 测试输出每个区域的树木数据
 
-            // 加载区域图片
-            areaImages[`area${i}`] = new Image();
-            areaImages[`area${i}`].src = `https://raw.githubusercontent.com/jiuliyux/jiuliyux.github.io/main/image/area${i}.png`;
+                    // 加载区域图片
+                    areaImages[`area${i}`] = new Image();
+                    areaImages[`area${i}`].src = `https://raw.githubusercontent.com/jiuliyux/jiuliyux.github.io/main/image/area${i}.png`;
+                    areaImages[`area${i}`].onload = () => {
+                        console.log(`Image for area${i} loaded successfully`);  // 图片加载成功时输出
+                    };
+                    areaImages[`area${i}`].onerror = (error) => {
+                        console.error(`Failed to load image for area${i}:`, error);  // 图片加载失败时输出
+                    };
+                }
+
+                // 加载大地图
+                const mapContainer = document.getElementById('mapContainer');
+                const mapImg = new Image();
+                mapImg.src = 'https://raw.githubusercontent.com/jiuliyux/jiuliyux.github.io/main/image/map.png';
+                mapImg.onload = () => {
+                    console.log('Map Image loaded successfully');  // 大地图加载成功时输出
+                    mapContainer.appendChild(mapImg);
+                };
+                mapImg.onerror = (error) => {
+                    console.error('Failed to load map image:', error);  // 大地图加载失败时输出
+                };
+
+                // 初始化地图
+                initializeMap();
+            }
+            catch (error) {
+                console.error('Error loading data:', error);
+                alert('加载数据失败');
+            }
         }
 
-        // 加载大地图
-        const mapContainer = document.getElementById('mapContainer');
-        const mapImg = new Image();
-        mapImg.src = 'https://raw.githubusercontent.com/jiuliyux/jiuliyux.github.io/main/image/map.png';
-        mapContainer.appendChild(mapImg);
-
-        // 初始化地图
-        initializeMap();
-    } catch (error) {
-        console.error('Error loading data:', error);
-        alert('加载数据失败');
-    }
-}
 
 
         // 显示详细地图
@@ -272,8 +296,7 @@
                 renderer.render(scene, camera);
             }
             animate();
-        }
-    </script>
+        }</script>
 </body>
 
 </html>
